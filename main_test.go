@@ -10,10 +10,11 @@ var a App
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS services
 (
-    id INT PRIMARY KEY,
-    name TEXT NOT NULL,
+	id SERIAL,
+	name TEXT NOT NULL,
 	endpoint TEXT NOT NULL,
-	command TEXT NOT NULL
+	command TEXT NOT NULL,
+	CONSTRAINT services_pkey PRIMARY KEY (id)
 )`
 
 func TestMain(m *testing.M) {
@@ -21,14 +22,11 @@ func TestMain(m *testing.M) {
 	a.Initialize(
 		os.Getenv("TEST_DB_USERNAME"),
 		os.Getenv("TEST_DB_PASSWORD"),
-		os.Getenv("TEST_DB_NAME"))
-
+		os.Getenv("TEST_DB_NAME"),
+	)
 	ensureTableExists()
-
 	code := m.Run()
-
 	clearTable()
-
 	os.Exit(code)
 }
 
@@ -39,6 +37,6 @@ func ensureTableExists() {
 }
 
 func clearTable() {
-	a.DB.Exec("DELETE FROM servcies")
-	a.DB.Exec("ALTER TABLE users AUTO_INCREMENT = 1")
+	a.DB.Exec("DELETE FROM services")
+	a.DB.Exec("ALTER SEQUENCE services_id_seq RESTART WITH 1")
 }
