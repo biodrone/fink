@@ -1,20 +1,13 @@
 package main
 
 import (
-	"bytes"
+	"database/sql"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"strings"
-)
+	"strconv"
 
-//set your Gateway Information
-var mid string = os.Getenv("GATEWAY_MERCHANT_ID")
-var apiVer string = os.Getenv("GATEWAY_API_VERSION") //>39
-var region string = os.Getenv("GATEWAY_REGION")      //ap, eu, na, in, mtf
-var user string = "merchant." + mid
-var pass string = os.Getenv("GATEWAY_API_PASSWORD")
+	"github.com/gorilla/mux"
+)
 
 //Index Function - Expects: GET Request - Returns: HTTP 200
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -22,119 +15,117 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 //StartPayment Function - Expects: Empty POST Request - Returns: SessionID and Operation Result
-func StartPayment(w http.ResponseWriter, r *http.Request) {
-
-	if region == "MTF" {
-		region = "test"
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	//build request JSON
-	jsonData := map[string]interface{}{
-		"correlationId": "001",
-		"session": map[string]string{
-			"authenticationLimit": "3",
-		},
-	}
-	jsonValue, _ := json.Marshal(jsonData)
-	//make request
-	request, _ := http.NewRequest("POST", "https://"+region+"-gateway.mastercard.com/api/rest/version/"+apiVer+"/merchant/"+mid+"/session", bytes.NewBuffer(jsonValue))
-	request.Header.Set("Content-Type", "application/json")
-	request.SetBasicAuth(user, pass)
-	client := &http.Client{}
-	response, err := client.Do(request)
-
-	//read the response
+func (a *App) getService(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		//empty response
-		Logger("An Error Occurred: Nil Response")
-
-		response := map[string]string{
-			"id":     "NONE",
-			"result": "FAILURE",
-		}
-		json.NewEncoder(w).Encode(response)
-	} else {
-		data, _ := ioutil.ReadAll(response.Body)
-		//response doesn't parse properly with json, use strings
-		id := strings.SplitAfter(string(data), "SESSION")[1]
-		id = strings.SplitAfter(id, ",")[0]
-		id = "SESSION" + strings.Trim(id, "\",")
-		Logger("Session " + id + " Obtained")
-
-		//send response back to App
-		response := map[string]string{
-			"id":     string(id),
-			"result": "SUCCESS",
-		}
-		json.NewEncoder(w).Encode(response)
+		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		return
 	}
+
+	s := service{ID: id}
+	if err := s.getService(a.DB); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, "Product not found")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, s)
 }
 
-//FinishPayment Function - Expects: SessionID - Returns: SessionID and Operation Result
-func FinishPayment(w http.ResponseWriter, r *http.Request) {
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
 
-	if region == "MTF" {
-		region = "test"
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
+}
+
+func (a *App) getServices(w http.ResponseWriter, r *http.Request) {
+	count, _ := strconv.Atoi(r.FormValue("count"))
+	start, _ := strconv.Atoi(r.FormValue("start"))
+
+	if count > 10 || count < 1 {
+		count = 10
+	}
+	if start < 0 {
+		start = 0
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	//read the SessionID coming from the App
-	body, _ := ioutil.ReadAll(r.Body)
-	id := strings.SplitAfter(string(body), "SESSION")[1]
-	id = "SESSION" + id[:len(id)-3]
-
-	//build request JSON
-	jsonData := map[string]interface{}{
-		"apiOperation": "PAY",
-		"order": map[string]string{
-			"currency": "GBP",
-			"amount":   "10",
-		},
-		"session": map[string]string{
-			"id": id,
-		},
-		"sourceOfFunds": map[string]string{
-			"type": "CARD",
-		},
-	}
-	jsonValue, _ := json.Marshal(jsonData)
-
-	//make request
-	request, _ := http.NewRequest("PUT", "https://"+region+"-gateway.mastercard.com/api/rest/version/"+apiVer+"/merchant/"+mid+"/order/"+id+"/transaction/"+id, bytes.NewBuffer(jsonValue))
-	request.Header.Set("Content-Type", "application/json")
-	request.SetBasicAuth(user, pass)
-	client := &http.Client{}
-	response, err := client.Do(request)
-	data, _ := ioutil.ReadAll(response.Body)
-
-	//read the response
+	products, err := getServices(a.DB, start, count)
 	if err != nil {
-		//empty response
-		Logger("An Error Occurred: Nil Response")
-		finalResponse := map[string]string{
-			"id":     string(id),
-			"result": "FAILURE"}
-		json.NewEncoder(w).Encode(finalResponse)
-	} else if strings.Contains(string(data), "SUCCESS") {
-		//SUCCESS response
-		Logger("PAY RESPONSE: " + string(data))
-		finalResponse := map[string]string{
-			"id":     string(id),
-			"result": "SUCCESS"}
-		json.NewEncoder(w).Encode(finalResponse)
-	} else {
-		//Error Response
-		Logger("An Error Occurred: Bad Request\n" + string(data))
-		finalResponse := map[string]string{
-			"id":     string(id),
-			"result": "FAILURE"}
-		json.NewEncoder(w).Encode(finalResponse)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
+
+	respondWithJSON(w, http.StatusOK, products)
+}
+
+func (a *App) createService(w http.ResponseWriter, r *http.Request) {
+	var s service
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&s); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	if err := s.createService(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, s)
+}
+
+func (a *App) updateService(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		return
+	}
+
+	var s service
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&s); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		return
+	}
+	defer r.Body.Close()
+	s.ID = id
+
+	if err := s.updateService(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, s)
+}
+
+func (a *App) deleteService(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Product ID")
+		return
+	}
+
+	s := service{ID: id}
+	if err := s.deleteService(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 //Auth Function: Handles incoming authentication from the App
