@@ -4,7 +4,7 @@ import "os"
 
 func main() {
 	a := App{}
-	a.Initialize(
+	a.Initialise(
 		os.Getenv("FINK_DB_USERNAME"),
 		os.Getenv("FINK_DB_PASSWORD"),
 		os.Getenv("FINK_DB_NAME"))

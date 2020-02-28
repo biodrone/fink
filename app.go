@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -15,8 +16,8 @@ type App struct {
 	DB     *sql.DB
 }
 
-//Initialize the App
-func (a *App) Initialize(user, password, dbname string) {
+//Initialise the App
+func (a *App) Initialise(user, password, dbname string) {
 	connectionString :=
 		fmt.Sprintf("user=%s password=%s dbname=%s", user, password, dbname)
 
@@ -27,7 +28,18 @@ func (a *App) Initialize(user, password, dbname string) {
 	}
 
 	a.Router = mux.NewRouter()
+	a.initializeRoutes()
 }
 
 //Run the App
-func (a *App) Run(addr string) {}
+func (a *App) Run(addr string) {
+	log.Fatal(http.ListenAndServe(":8000", a.Router))
+}
+
+func (a *App) initializeRoutes() {
+	a.Router.HandleFunc("/services", a.getServices).Methods("GET")
+	a.Router.HandleFunc("/service", a.createService).Methods("POST")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", a.getService).Methods("GET")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", a.updateService).Methods("PUT")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", a.deleteService).Methods("DELETE")
+}

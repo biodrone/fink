@@ -24,7 +24,7 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS services
 
 func TestMain(m *testing.M) {
 	a = App{}
-	a.Initialize(
+	a.Initialise(
 		os.Getenv("TEST_DB_USERNAME"),
 		os.Getenv("TEST_DB_PASSWORD"),
 		os.Getenv("TEST_DB_NAME"),
