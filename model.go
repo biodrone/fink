@@ -25,39 +25,39 @@ func getServices(db *sql.DB, start, count int) ([]service, error) {
 	services := []service{}
 
 	for rows.Next() {
-		var p service
-		if err := rows.Scan(&p.ID, &p.Name, &p.Endpoint, &p.Command); err != nil {
+		var s service
+		if err := rows.Scan(&s.ID, &s.Name, &s.Endpoint, &s.Command); err != nil {
 			return nil, err
 		}
-		services = append(services, p)
+		services = append(services, s)
 	}
 
 	return services, nil
 }
 
-func (p *service) getService(db *sql.DB) error {
+func (s *service) getService(db *sql.DB) error {
 	return db.QueryRow("SELECT name, endpoint FROM services WHERE id=$1",
-		p.ID).Scan(&p.Name, &p.Endpoint, &p.Command)
+		s.ID).Scan(&s.Name, &s.Endpoint, &s.Command)
 }
 
-func (p *service) updateService(db *sql.DB) error {
+func (s *service) updateService(db *sql.DB) error {
 	_, err :=
 		db.Exec("UPDATE services SET name=$1, endpoint=$2, command=$3 WHERE id=$4",
-			p.Name, p.Endpoint, &p.Command, p.ID)
+			s.Name, s.Endpoint, &s.Command, s.ID)
 
 	return err
 }
 
-func (p *service) deleteService(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM services WHERE id=$1", p.ID)
+func (s *service) deleteService(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM services WHERE id=$1", s.ID)
 
 	return err
 }
 
-func (p *service) createService(db *sql.DB) error {
+func (s *service) createService(db *sql.DB) error {
 	err := db.QueryRow(
 		"INSERT INTO services(name, endpoint, command) VALUES($1, $2, $3) RETURNING id",
-		p.Name, p.Endpoint, &p.Command).Scan(&p.ID)
+		s.Name, s.Endpoint, &s.Command).Scan(&s.ID)
 
 	if err != nil {
 		return err
