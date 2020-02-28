@@ -9,12 +9,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//Index Function - Expects: GET Request - Returns: HTTP 200
 func Index(w http.ResponseWriter, r *http.Request) {
 	Logger("The Index Page Has Been Accessed")
 }
 
-//StartPayment Function - Expects: Empty POST Request - Returns: SessionID and Operation Result
 func (a *App) getService(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -38,6 +36,7 @@ func (a *App) getService(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
+	print("Shit is fucked")
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
 

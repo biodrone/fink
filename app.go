@@ -33,13 +33,13 @@ func (a *App) Initialise(user, password, dbname string) {
 
 //Run the App
 func (a *App) Run(addr string) {
-	log.Fatal(http.ListenAndServe(":8000", a.Router))
+	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/services", a.getServices).Methods("GET")
-	a.Router.HandleFunc("/service", a.createService).Methods("POST")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", a.getService).Methods("GET")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", a.updateService).Methods("PUT")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", a.deleteService).Methods("DELETE")
+	a.Router.HandleFunc("/services", Auth(a.getServices)).Methods("GET")
+	a.Router.HandleFunc("/service", Auth(a.createService)).Methods("POST")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.getService)).Methods("GET")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.updateService)).Methods("PUT")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.deleteService)).Methods("DELETE")
 }
