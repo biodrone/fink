@@ -13,7 +13,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	Logger("The Index Page Has Been Accessed")
 }
 
-func (a *App) getService(w http.ResponseWriter, r *http.Request) {
+func (a *App) getServiceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -48,7 +48,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-func (a *App) getServices(w http.ResponseWriter, r *http.Request) {
+func (a *App) getServicesHandler(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
 
@@ -68,7 +68,7 @@ func (a *App) getServices(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, products)
 }
 
-func (a *App) createService(w http.ResponseWriter, r *http.Request) {
+func (a *App) createServiceHandler(w http.ResponseWriter, r *http.Request) {
 	var s service
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
@@ -85,7 +85,7 @@ func (a *App) createService(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, s)
 }
 
-func (a *App) updateService(w http.ResponseWriter, r *http.Request) {
+func (a *App) updateServiceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -110,7 +110,7 @@ func (a *App) updateService(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, s)
 }
 
-func (a *App) deleteService(w http.ResponseWriter, r *http.Request) {
+func (a *App) deleteServiceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {

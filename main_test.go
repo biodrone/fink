@@ -50,6 +50,7 @@ func TestEmptyTable(t *testing.T) {
 	clearTable()
 
 	req, _ := http.NewRequest("GET", "/services", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)

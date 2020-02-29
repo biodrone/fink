@@ -37,9 +37,9 @@ func (a *App) Run(addr string) {
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/services", Auth(a.getServices)).Methods("GET")
-	a.Router.HandleFunc("/service", Auth(a.createService)).Methods("POST")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.getService)).Methods("GET")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.updateService)).Methods("PUT")
-	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.deleteService)).Methods("DELETE")
+	a.Router.HandleFunc("/services", Auth(a.getServicesHandler)).Methods("GET")
+	a.Router.HandleFunc("/service", Auth(a.createServiceHandler)).Methods("POST")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.getServiceHandler)).Methods("GET")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.updateServiceHandler)).Methods("PUT")
+	a.Router.HandleFunc("/service/{id:[0-9]+}", Auth(a.deleteServiceHandler)).Methods("DELETE")
 }
