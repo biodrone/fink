@@ -76,6 +76,7 @@ func TestGetNonExistentService(t *testing.T) {
 	clearTable()
 
 	req, _ := http.NewRequest("GET", "/services/11", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -93,6 +94,7 @@ func TestCreateService(t *testing.T) {
 	payload := []byte(`{"name":"test_service","endpoint":"some_webhook","command":"ls -lah"}`)
 
 	req, _ := http.NewRequest("POST", "/service", bytes.NewBuffer(payload))
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusCreated, response.Code)
@@ -124,6 +126,7 @@ func TestGetService(t *testing.T) {
 	addServices(1)
 
 	req, _ := http.NewRequest("GET", "/service/1", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -144,6 +147,7 @@ func TestUpdateService(t *testing.T) {
 	addServices(1)
 
 	req, _ := http.NewRequest("GET", "/service/1", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 	var originalService map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalService)
@@ -151,6 +155,7 @@ func TestUpdateService(t *testing.T) {
 	payload := []byte(`{"name":"test_service_UPDATE","endpoint":"some_webhook","command":"ls -lah"}`)
 
 	req, _ = http.NewRequest("PUT", "/service/1", bytes.NewBuffer(payload))
+	req.Header.Set("APIKEY", "APIKEY")
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -180,15 +185,18 @@ func TestDeleteService(t *testing.T) {
 	addServices(1)
 
 	req, _ := http.NewRequest("GET", "/service/1", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("DELETE", "/service/1", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("GET", "/service/1", nil)
+	req.Header.Set("APIKEY", "APIKEY")
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }

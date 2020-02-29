@@ -131,7 +131,7 @@ func (a *App) deleteService(w http.ResponseWriter, r *http.Request) {
 func Auth(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		apikey := r.Header.Get("APIKEY")
-		if apikey != "TESTSDK" {
+		if apikey != "APIKEY" {
 			http.Error(w, "Unauthorized.", http.StatusUnauthorized)
 			return
 		}
