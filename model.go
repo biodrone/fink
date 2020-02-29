@@ -5,10 +5,10 @@ import (
 )
 
 type service struct {
-	ID       int     `json:"id"`
-	Name     string  `json:"name"`
-	Endpoint float64 `json:"endpoint"`
-	Command  string  `json:"command"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Endpoint string `json:"endpoint"`
+	Command  string `json:"command"`
 }
 
 func getServices(db *sql.DB, start, count int) ([]service, error) {
@@ -36,7 +36,7 @@ func getServices(db *sql.DB, start, count int) ([]service, error) {
 }
 
 func (s *service) getService(db *sql.DB) error {
-	return db.QueryRow("SELECT name, endpoint FROM services WHERE id=$1",
+	return db.QueryRow("SELECT name, endpoint, command FROM services WHERE id=$1",
 		s.ID).Scan(&s.Name, &s.Endpoint, &s.Command)
 }
 

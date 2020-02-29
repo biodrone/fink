@@ -139,7 +139,7 @@ func addServices(count int) {
 	}
 
 	for i := 0; i < count; i++ {
-		a.DB.Exec("INSERT INTO services(name, price) VALUES($1, $2)", "Service "+strconv.Itoa(i), (i+1.0)*10)
+		a.DB.Exec("INSERT INTO services(name, endpoint, command) VALUES($1, $2, $3)", "Service "+strconv.Itoa(i), "some_endpoint", "some_command")
 	}
 }
 
