@@ -76,7 +76,7 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 func TestGetNonExistentService(t *testing.T) {
 	clearTable()
 
-	req, _ := http.NewRequest("GET", "/services/11", nil)
+	req, _ := http.NewRequest("GET", "/service/11", nil)
 	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
 
@@ -97,7 +97,6 @@ func TestCreateService(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/service", bytes.NewBuffer(payload))
 	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
-
 	checkResponseCode(t, http.StatusCreated, response.Code)
 
 	var m map[string]interface{}
@@ -152,6 +151,7 @@ func TestUpdateService(t *testing.T) {
 	response := executeRequest(req)
 	var originalService map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalService)
+	//println(response.Body.String())
 
 	payload := []byte(`{"name":"test_service_UPDATE","endpoint":"some_webhook","command":"ls -lah"}`)
 
@@ -163,6 +163,7 @@ func TestUpdateService(t *testing.T) {
 
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
+	//println(response.Body.String())
 
 	if m["id"] != originalService["id"] {
 		t.Errorf("Expected the id to remain the same (%v). Got %v", originalService["id"], m["id"])
@@ -188,16 +189,19 @@ func TestDeleteService(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/service/1", nil)
 	req.Header.Set("APIKEY", "APIKEY")
 	response := executeRequest(req)
+	//println(response.Body.String())
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("DELETE", "/service/1", nil)
 	req.Header.Set("APIKEY", "APIKEY")
 	response = executeRequest(req)
+	//println(response.Body.String())
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("GET", "/service/1", nil)
 	req.Header.Set("APIKEY", "APIKEY")
 	response = executeRequest(req)
+	//print(response.Body.String())
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }

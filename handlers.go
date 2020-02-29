@@ -17,7 +17,7 @@ func (a *App) getServiceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid service ID")
 		return
 	}
 
@@ -25,7 +25,7 @@ func (a *App) getServiceHandler(w http.ResponseWriter, r *http.Request) {
 	if err := s.getService(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			respondWithError(w, http.StatusNotFound, "Product not found")
+			respondWithError(w, http.StatusNotFound, "Service not found")
 		default:
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -36,7 +36,7 @@ func (a *App) getServiceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
-	print("Shit is fucked")
+	//print("Shit is fucked")
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
 
@@ -72,6 +72,8 @@ func (a *App) createServiceHandler(w http.ResponseWriter, r *http.Request) {
 	var s service
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
+		print("Error: ")
+		println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
@@ -96,7 +98,7 @@ func (a *App) updateServiceHandler(w http.ResponseWriter, r *http.Request) {
 	var s service
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
